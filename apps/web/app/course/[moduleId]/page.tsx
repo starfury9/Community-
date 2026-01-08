@@ -2,8 +2,15 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 
 import { auth } from "@/lib/auth";
-import { getPublishedModuleWithLessons } from "@/lib/data";
-import { LessonList } from "@/components/course";
+import { 
+  getPublishedModuleWithLessons, 
+  isModuleUnlocked,
+  getModuleProgress,
+  getCompletedLessonIds,
+} from "@/lib/data";
+import { prisma } from "@/lib/prisma";
+import { LessonList, LockedModulePage } from "@/components/course";
+import { ModuleProgressBar } from "@/components/progress";
 
 interface ModulePageProps {
   params: Promise<{ moduleId: string }>;
@@ -17,11 +24,46 @@ export default async function ModulePage({ params }: ModulePageProps) {
   }
 
   const { moduleId } = await params;
-  const module = await getPublishedModuleWithLessons(moduleId);
+  const courseModule = await getPublishedModuleWithLessons(moduleId);
 
-  if (!module) {
+  if (!courseModule) {
     notFound();
   }
+
+  // Check if module is unlocked
+  const unlocked = await isModuleUnlocked(session.user.id, moduleId);
+
+  // If module is locked, find the previous module
+  if (!unlocked && courseModule.order > 1) {
+    const previousModule = await prisma.module.findFirst({
+      where: {
+        published: true,
+        order: { lt: courseModule.order },
+      },
+      orderBy: { order: "desc" },
+      select: {
+        id: true,
+        title: true,
+        order: true,
+      },
+    });
+
+    if (previousModule) {
+      return (
+        <LockedModulePage
+          moduleTitle={courseModule.title}
+          moduleOrder={courseModule.order}
+          lockedBy={previousModule}
+        />
+      );
+    }
+  }
+
+  // Get progress data
+  const [progress, completedLessonIds] = await Promise.all([
+    getModuleProgress(session.user.id, moduleId),
+    getCompletedLessonIds(session.user.id),
+  ]);
 
   return (
     <div className="min-h-screen p-8">
@@ -32,47 +74,46 @@ export default async function ModulePage({ params }: ModulePageProps) {
             Course
           </Link>
           <span>/</span>
-          <span className="text-foreground">{module.title}</span>
+          <span className="text-foreground">{courseModule.title}</span>
         </nav>
 
         {/* Module Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
-              {module.order}
+              {courseModule.order}
             </span>
             <span className="text-sm text-muted-foreground">
-              Module {module.order}
+              Module {courseModule.order}
             </span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">{module.title}</h1>
-          {module.description && (
+          <h1 className="text-3xl font-bold tracking-tight">{courseModule.title}</h1>
+          {courseModule.description && (
             <p className="text-muted-foreground mt-2 text-lg">
-              {module.description}
+              {courseModule.description}
             </p>
           )}
         </div>
 
-        {/* Progress bar placeholder */}
+        {/* Progress bar */}
         <div className="mb-8 rounded-lg border bg-card p-4">
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="font-medium">Your Progress</span>
-            <span className="text-muted-foreground">0% Complete</span>
-          </div>
-          <div className="h-2 rounded-full bg-muted overflow-hidden">
-            <div className="h-full bg-primary w-0 transition-all" />
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            0 of {module.lessons.length} lessons completed
-          </p>
+          <ModuleProgressBar
+            completed={progress.completed}
+            total={progress.total}
+            size="md"
+          />
         </div>
 
         {/* Lessons */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">
-            Lessons ({module.lessons.length})
+            Lessons ({courseModule.lessons.length})
           </h2>
-          <LessonList moduleId={module.id} lessons={module.lessons} />
+          <LessonList 
+            moduleId={courseModule.id} 
+            lessons={courseModule.lessons}
+            completedLessonIds={new Set(completedLessonIds)}
+          />
         </div>
 
         {/* Back to course */}

@@ -73,7 +73,7 @@ export async function createLesson(data: CreateLessonInput) {
     data: {
       moduleId: data.moduleId,
       title: data.title,
-      content: data.content ?? null,
+      content: data.content ?? Prisma.JsonNull,
       order: nextOrder,
       published: false, // New lessons are unpublished by default
       isFree: data.isFree ?? false,

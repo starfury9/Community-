@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 // ===========================================
 // LESSON CRUD OPERATIONS
@@ -11,7 +11,7 @@ import type { Prisma } from "@prisma/client";
 export async function createLesson(data: {
   moduleId: string;
   title: string;
-  content?: Prisma.JsonValue;
+  content?: Prisma.InputJsonValue;
   published?: boolean;
   isFree?: boolean;
 }) {
@@ -27,7 +27,7 @@ export async function createLesson(data: {
     data: {
       moduleId: data.moduleId,
       title: data.title,
-      content: data.content ?? null,
+      content: data.content ?? Prisma.JsonNull,
       published: data.published ?? false,
       isFree: data.isFree ?? false,
       order: nextOrder,
@@ -165,17 +165,25 @@ export async function updateLesson(
   id: string,
   data: {
     title?: string;
-    content?: Prisma.JsonValue;
+    content?: Prisma.InputJsonValue | typeof Prisma.JsonNull;
     published?: boolean;
     isFree?: boolean;
-    muxAssetId?: string;
-    muxPlaybackId?: string;
-    videoDuration?: number;
+    muxAssetId?: string | null;
+    muxPlaybackId?: string | null;
+    videoDuration?: number | null;
   }
 ) {
   return prisma.lesson.update({
     where: { id },
-    data,
+    data: {
+      title: data.title,
+      content: data.content,
+      published: data.published,
+      isFree: data.isFree,
+      muxAssetId: data.muxAssetId,
+      muxPlaybackId: data.muxPlaybackId,
+      videoDuration: data.videoDuration,
+    },
   });
 }
 

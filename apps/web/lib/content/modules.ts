@@ -121,18 +121,18 @@ export async function reorderModules(moduleIds: string[]) {
  * Toggle module published state
  */
 export async function toggleModulePublished(id: string) {
-  const module = await prisma.module.findUnique({
+  const existingModule = await prisma.module.findUnique({
     where: { id },
     select: { published: true },
   });
 
-  if (!module) {
+  if (!existingModule) {
     throw new Error("Module not found");
   }
 
   return prisma.module.update({
     where: { id },
-    data: { published: !module.published },
+    data: { published: !existingModule.published },
   });
 }
 

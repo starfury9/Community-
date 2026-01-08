@@ -75,8 +75,9 @@ export function VideoUpload({
     }, 1000);
   }
 
-  function handleUploadError(event: CustomEvent) {
-    console.error("Upload error:", event.detail);
+  function handleUploadError(event: unknown) {
+    const errorEvent = event as { detail?: unknown };
+    console.error("Upload error:", errorEvent.detail || event);
     setError("Upload failed. Please try again.");
     setUploadStatus("idle");
   }

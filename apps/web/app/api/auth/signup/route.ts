@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { triggerWelcomeEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -72,6 +73,11 @@ export async function POST(request: Request) {
           method: "credentials",
         },
       },
+    });
+
+    // Send welcome email (async, don't wait)
+    triggerWelcomeEmail(user.id).catch((err) => {
+      console.error("Failed to trigger welcome email:", err);
     });
 
     return NextResponse.json(

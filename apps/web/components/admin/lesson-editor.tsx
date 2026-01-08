@@ -67,7 +67,7 @@ export function LessonEditor({ lesson }: LessonEditorProps) {
 
     const result = await updateLessonAction(lesson.id, {
       title,
-      content,
+      content: content as Prisma.InputJsonValue | undefined,
       isFree,
       published: isPublished,
     });

@@ -28,3 +28,10 @@ export {
   deleteAssetAction,
   deleteAllLessonAssetsAction,
 } from "./assets";
+
+// Progress actions
+export {
+  markLessonCompleteAction,
+  markLessonIncompleteAction,
+  getUserProgressAction,
+} from "./progress";

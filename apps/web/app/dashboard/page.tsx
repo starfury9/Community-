@@ -4,7 +4,12 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { OnboardingBanner } from "@/components/onboarding";
 import { ModuleCard } from "@/components/course";
-import { getPublishedModules } from "@/lib/data";
+import { CourseProgressCard } from "@/components/progress";
+import {
+  getCourseProgress,
+  getNextIncompleteLesson,
+  getModulesWithProgress,
+} from "@/lib/data";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -16,8 +21,12 @@ export default async function DashboardPage() {
 
   const isAdmin = session.user.role === "ADMIN";
   
-  // Fetch published modules for the course
-  const modules = await getPublishedModules();
+  // Fetch progress data - getModulesWithProgress includes all module data with progress
+  const [courseProgress, nextLesson, modulesWithProgress] = await Promise.all([
+    getCourseProgress(session.user.id),
+    getNextIncompleteLesson(session.user.id),
+    getModulesWithProgress(session.user.id),
+  ]);
 
   return (
     <div className="min-h-screen p-8">
@@ -43,16 +52,21 @@ export default async function DashboardPage() {
           )}
         </div>
 
+        {/* Progress Card */}
+        <div className="mb-8">
+          <CourseProgressCard progress={courseProgress} nextLesson={nextLesson} />
+        </div>
+
         {/* Course Modules */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Course Modules</h2>
             <span className="text-sm text-muted-foreground">
-              {modules.length} module{modules.length !== 1 ? "s" : ""}
+              {modulesWithProgress.length} module{modulesWithProgress.length !== 1 ? "s" : ""}
             </span>
           </div>
 
-          {modules.length === 0 ? (
+          {modulesWithProgress.length === 0 ? (
             <div className="rounded-lg border border-dashed p-12 text-center">
               <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
                 <svg
@@ -76,11 +90,13 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="grid gap-4">
-              {modules.map((module) => (
+              {modulesWithProgress.map((moduleData) => (
                 <ModuleCard
-                  key={module.id}
-                  module={module}
-                  progress={0} // TODO: Calculate real progress
+                  key={moduleData.id}
+                  module={moduleData}
+                  progress={moduleData.percentage}
+                  completedLessons={moduleData.completedCount}
+                  totalLessons={moduleData.lessonCount}
                 />
               ))}
             </div>

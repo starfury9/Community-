@@ -98,6 +98,7 @@ export function LessonItem({ lesson, moduleId, index }: LessonItemProps) {
       <button
         {...attributes}
         {...listeners}
+        suppressHydrationWarning
         className="cursor-grab touch-none p-1 text-muted-foreground hover:text-foreground"
         aria-label="Drag to reorder"
       >

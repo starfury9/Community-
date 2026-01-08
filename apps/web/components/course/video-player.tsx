@@ -59,8 +59,7 @@ export function VideoPlayer({ playbackId, playbackToken, title }: VideoPlayerPro
         style={{ 
           aspectRatio: "16/9",
           width: "100%",
-          "--media-object-fit": "contain",
-        } as React.CSSProperties}
+        }}
       />
     </div>
   );

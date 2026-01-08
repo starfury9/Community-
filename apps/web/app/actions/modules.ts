@@ -29,13 +29,13 @@ export async function createModuleAction(data: {
   }
 
   try {
-    const module = await createModuleData({
+    const createdModule = await createModuleData({
       title: data.title.trim(),
       description: data.description?.trim(),
     });
 
     revalidatePath("/admin/content");
-    return { success: true, module };
+    return { success: true, module: createdModule };
   } catch (error) {
     console.error("Failed to create module:", error);
     return { error: "Failed to create module" };
@@ -65,7 +65,7 @@ export async function updateModuleAction(
   }
 
   try {
-    const module = await updateModuleData(id, {
+    const updatedModule = await updateModuleData(id, {
       title: data.title?.trim(),
       description: data.description?.trim(),
       published: data.published,
@@ -73,7 +73,7 @@ export async function updateModuleAction(
 
     revalidatePath("/admin/content");
     revalidatePath("/dashboard");
-    return { success: true, module };
+    return { success: true, module: updatedModule };
   } catch (error) {
     console.error("Failed to update module:", error);
     return { error: "Failed to update module" };
@@ -92,11 +92,11 @@ export async function toggleModulePublishedAction(id: string) {
   }
 
   try {
-    const module = await toggleModulePublishedData(id);
+    const toggledModule = await toggleModulePublishedData(id);
 
     revalidatePath("/admin/content");
     revalidatePath("/dashboard");
-    return { success: true, module };
+    return { success: true, module: toggledModule };
   } catch (error) {
     console.error("Failed to toggle module published:", error);
     return { error: "Failed to update module" };

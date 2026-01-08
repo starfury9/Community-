@@ -78,6 +78,7 @@ export function ModuleCard({ module }: ModuleCardProps) {
         <button
           {...attributes}
           {...listeners}
+          suppressHydrationWarning
           className="cursor-grab touch-none p-1 text-muted-foreground hover:text-foreground"
           aria-label="Drag to reorder"
         >

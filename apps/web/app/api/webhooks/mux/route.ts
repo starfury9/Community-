@@ -1,9 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import Mux from "@mux/mux-node";
+import { createHmac, timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 
 // Disable body parsing - we need raw body for signature verification
 export const runtime = "nodejs";
+
+// Verify Mux webhook signature manually
+function verifyMuxSignature(
+  payload: string,
+  signature: string,
+  secret: string
+): boolean {
+  try {
+    // Mux signature format: t=timestamp,v1=signature
+    const parts = signature.split(",");
+    const timestamp = parts.find((p) => p.startsWith("t="))?.slice(2);
+    const sigHash = parts.find((p) => p.startsWith("v1="))?.slice(3);
+
+    if (!timestamp || !sigHash) {
+      return false;
+    }
+
+    // Create expected signature
+    const signedPayload = `${timestamp}.${payload}`;
+    const expectedSignature = createHmac("sha256", secret)
+      .update(signedPayload)
+      .digest("hex");
+
+    // Use timing-safe comparison
+    return timingSafeEqual(
+      Buffer.from(sigHash),
+      Buffer.from(expectedSignature)
+    );
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,15 +44,10 @@ export async function POST(request: NextRequest) {
 
     // Verify webhook signature if secret is configured
     const webhookSecret = process.env.MUX_WEBHOOK_SECRET;
-    
+
     if (webhookSecret && signature) {
-      try {
-        // Verify the webhook signature
-        Mux.Webhooks.verifySignature(body, {
-          "mux-signature": signature,
-        }, webhookSecret);
-      } catch (err) {
-        console.error("Webhook signature verification failed:", err);
+      if (!verifyMuxSignature(body, signature, webhookSecret)) {
+        console.error("Webhook signature verification failed");
         return NextResponse.json(
           { error: "Invalid signature" },
           { status: 401 }
