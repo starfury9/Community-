@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { trackEvent, trackEventOnce, EVENTS, EventName } from "@/lib/tracking";
 
 // Events that can be tracked without authentication
-const ANONYMOUS_EVENTS = new Set([
+const ANONYMOUS_EVENTS: Set<string> = new Set([
   EVENTS.SIGNUP_STARTED,
   EVENTS.PAYWALL_VIEWED,
 ]);
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if authentication is required
-    if (!session?.user?.id && !ANONYMOUS_EVENTS.has(event as EventName)) {
+    if (!session?.user?.id && !ANONYMOUS_EVENTS.has(event)) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
@@ -47,13 +47,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Track the event (using trackEventOnce for certain events to prevent duplicates)
-    const deduplicatedEvents = new Set([
+    const deduplicatedEvents: Set<string> = new Set([
       EVENTS.SIGNUP_STARTED,
       EVENTS.PAYWALL_VIEWED,
       EVENTS.LESSON_STARTED,
     ]);
 
-    if (deduplicatedEvents.has(event as EventName)) {
+    if (deduplicatedEvents.has(event)) {
       await trackEventOnce({
         userId,
         event: event as EventName,

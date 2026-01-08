@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 // Event name constants to prevent typos
 export const EVENTS = {
@@ -47,7 +48,7 @@ export async function trackEvent({ userId, event, properties }: TrackEventOption
       data: {
         userId,
         name: event,
-        properties: properties || {},
+        properties: (properties || {}) as Prisma.InputJsonValue,
       },
     });
   } catch (error) {

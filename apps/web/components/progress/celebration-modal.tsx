@@ -156,7 +156,7 @@ export function CelebrationModal({
               >
                 <Linkedin className="h-5 w-5" />
               </a>
-              {typeof navigator !== "undefined" && navigator.share && (
+              {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
                 <button
                   onClick={handleShare}
                   className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-foreground hover:bg-muted/80 transition-colors"

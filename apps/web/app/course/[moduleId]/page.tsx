@@ -53,7 +53,11 @@ export default async function ModulePage({ params }: ModulePageProps) {
         <LockedModulePage
           moduleTitle={courseModule.title}
           moduleOrder={courseModule.order}
-          lockedBy={previousModule}
+          lockedBy={{
+            moduleId: previousModule.id,
+            moduleTitle: previousModule.title,
+            moduleOrder: previousModule.order,
+          }}
         />
       );
     }

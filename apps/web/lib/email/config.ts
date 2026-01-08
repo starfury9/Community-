@@ -1,12 +1,14 @@
 import Mailgun from "mailgun.js";
 import formData from "form-data";
-import type { IMailgunClient } from "mailgun.js/Interfaces";
+
+// Type for Mailgun client
+type MailgunClient = ReturnType<InstanceType<typeof Mailgun>["client"]>;
 
 // Mailgun configuration - lazily initialized
-let mgClient: IMailgunClient | null = null;
+let mgClient: MailgunClient | null = null;
 
 // Get Mailgun client (lazy initialization)
-export function getMailgunClient(): IMailgunClient | null {
+export function getMailgunClient(): MailgunClient | null {
   if (mgClient) return mgClient;
   
   const apiKey = process.env.MAILGUN_API_KEY;
@@ -19,8 +21,8 @@ export function getMailgunClient(): IMailgunClient | null {
   mgClient = mailgun.client({
     username: "api",
     key: apiKey,
-    // EU region support: uncomment if using EU
-    // url: "https://api.eu.mailgun.net",
+    // EU region - required for buddy-mail.co.uk domain
+    url: "https://api.eu.mailgun.net",
   });
 
   return mgClient;
@@ -39,10 +41,10 @@ export const mg = {
 
 // Email configuration
 export const emailConfig = {
-  domain: process.env.MAILGUN_DOMAIN || "sandbox.mailgun.org",
-  fromEmail: process.env.EMAIL_FROM || "AI Systems Architect <noreply@aisystemsarchitect.com>",
+  domain: process.env.MAILGUN_DOMAIN || "buddy-mail.co.uk",
+  fromEmail: process.env.EMAIL_FROM || "AI Systems Architect <postmaster@buddy-mail.co.uk>",
   fromName: "AI Systems Architect",
-  replyTo: process.env.EMAIL_REPLY_TO || "support@aisystemsarchitect.com",
+  replyTo: process.env.EMAIL_REPLY_TO || "support@buddy-mail.co.uk",
   // Sandbox mode - only send to verified recipients
   isSandbox: process.env.NODE_ENV !== "production" || !process.env.MAILGUN_DOMAIN?.includes("mailgun.org") === false,
 };
